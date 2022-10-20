@@ -1,7 +1,6 @@
 FROM python:3.8-alpine3.16
 LABEL maintainer="niknik9000"
 
-ENV WORKSPACE=$(pwd)
 ENV LANG=ru_RU.utf8
 RUN mkdir -p /usr/src/app/token/
 WORKDIR /usr/src/app/

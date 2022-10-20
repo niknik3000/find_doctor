@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 
 ./find_doctor/common.py
+./common.py
