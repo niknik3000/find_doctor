@@ -1,0 +1,32 @@
+version: "3"
+services:
+#  yarmak:
+#    image: python:3.8-alpine3.16
+##    container_name: yarmak
+#    restart: always
+#    volumes:
+#      - /home/tele_tok/:/usr/src/app/token/
+#    environment:
+#      - TZ=Europe/Moscow
+#    build: find_doctor/
+#    command: python3 find_doctor.py --name Ярмак
+#  battalova:
+#    image: python:3.8-alpine3.16
+##    container_name: battalova
+#    restart: always
+#    volumes:
+#      - /home/tele_tok/:/usr/src/app/token/
+#    environment:
+#      - TZ=Europe/Moscow
+#    build: find_doctor/
+#    command: python3 find_doctor.py --name Батталова
+  orlova:
+    image: python:3.8-alpine3.16
+    #    container_name: orlova
+    restart: always
+    volumes:
+      - /home/tele_tok/:/usr/src/app/token/
+    environment:
+      - TZ=Europe/Moscow
+    build: find_doctor/
+    command: python3 find_doctor.py --name Орлова
