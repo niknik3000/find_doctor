@@ -4,4 +4,5 @@ LABEL maintainer="niknik9000"
 ENV LANG=ru_RU.utf8
 RUN mkdir -p /usr/src/app/token/
 WORKDIR /usr/src/app/
+COPY ./requirements.txt /usr/src/app/
 RUN apk add --no-cache build-base libffi-dev && pip3 install --no-cache-dir -r requirements.txt
