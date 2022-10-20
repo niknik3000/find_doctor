@@ -6,25 +6,18 @@ from dateutil.relativedelta import relativedelta
 import logging
 import argparse
 import common
+import os
 
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(levelname)s] %(message)s', datefmt='%d-%b-%y %H:%M:%S')
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
 
-
-family = {
-    'Ярмак' : 22,
-    'Орлова' : 22,
-    'Николаева' : 19,
-    'Наумов' : 11,
-    'Оленева' : 14,
-    'Батталова' : 28,
-    'Стоматология' : 208,
-    'Офтальмолог' : 20
-    }
+CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
+family = (json.loads(open(os.path.join(CURRENT_DIR, "find_doctors.json")).read()))["all_doctors"]
 
 seconds2check = 300
+
 
 class Doctors:
     """docstring"""
@@ -159,7 +152,7 @@ if __name__ == "__main__":
                     sended_tickets[key] = []
                 if value:
                     if (
-                        (len([x for x in get_info.keys() if params.name in x]) > 0 and params.name in key) \
+                        (len([x for x in get_info.keys() if params.name in x]) > 0 and params.name in key)
                         or (len([x for x in get_info.keys() if params.name in x]) == 0)
                         ):
                         for _date, _number in value.items():
