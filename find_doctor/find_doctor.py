@@ -16,7 +16,7 @@ console.setLevel(logging.INFO)
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 family = (json.loads(open(os.path.join(CURRENT_DIR, "find_doctors.json")).read()))["all_doctors"]
 
-seconds2check = 300
+seconds2check = 90
 
 
 class Doctors:
@@ -112,7 +112,7 @@ class Doctors:
 def createParser():
     """Парсим аргументы запуска скрипта"""
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--name', default='Батталова', help="Фамилия врача")
+    parser.add_argument('-t', '--name', default='Николаева', help="Фамилия врача")
     parser.add_argument('-c', '--days_count', default=20, help="На сколько дней вперед ищем, по умолчанию 20 дней от текущей даты")
     parser.add_argument('-d', '--debug', action='store_false', help="Выводить отладочный лог")
     return parser
