@@ -40,7 +40,7 @@ class Doctors:
                 else:
                     spec_data[json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']['ScheduleRecord']['DoctorName']] = json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']['ScheduleRecord']['ListDateRecords']['DateRecords']
         except Exception as ex:
-            logging.error(f"Исключение при обработке запроса:\nИсключение:{ex}\nТело ответа:{get_info}")
+            # logging.error(f"Исключение при обработке запроса:\nИсключение:{ex}\nТело ответа:{get_info}")
             if json.loads(get_info).get('GetScheduleTableResponse').get('Error').get("errorDetail").get("errorCode") != 0:
                 common.send_statistics(f"Исключение при обработке запроса:\nИсключение:{ex}\nТело ответа:{get_info}")
         return spec_data
@@ -51,7 +51,7 @@ class Doctors:
         """
         Get info from server
         """
-        logging.info("specId " + str(specId))
+        # logging.info("specId " + str(specId))
         address = 'https://intermed76.ru/intermed/findSchedulesTable'
         headers = {
             'User-Agent' : 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:91.0) Gecko/20100101 Firefox/91.0',
@@ -136,13 +136,14 @@ if __name__ == "__main__":
         console.setLevel(logging.INFO)
     if not params.name in family.keys():
         raise ValueError(f"Специалист должен быть в списке {family.keys()}")
+    common.send_statistics(f"Поиск явок для {params.name}")
     while True:
         send_data = ''
         delta = (datetime.datetime.strptime(str(start_date), '%Y-%m-%d') -  datetime.datetime.today()).days
         if delta < -1: # КОКОСТЫЛЬНЕКО раз в сутки обнуляем списки обработанных дат
             start_date =  datetime.date.today()
             sended_tickets = {}
-            logging.info("С обнулением!!!")
+            # logging.info("С обнулением!!!")
         DateFrom = datetime.date.today() + relativedelta(days=1)
         DateTo = datetime.date.today() + relativedelta(days=int(params.days_count))
         logging.info(f'Ищем явки для {params.name} c {DateFrom} по {DateTo}')
