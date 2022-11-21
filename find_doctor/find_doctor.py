@@ -17,7 +17,6 @@ console.setLevel(logging.INFO)
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 family = (json.loads(open(os.path.join(CURRENT_DIR, "find_doctors.json")).read()))["all_doctors"]
 
-seconds2check = randint(30, 50)
 
 
 class Doctors:
@@ -138,6 +137,7 @@ if __name__ == "__main__":
         raise ValueError(f"Специалист должен быть в списке {family.keys()}")
     common.send_statistics(f"Поиск явок для {params.name}")
     while True:
+        seconds2check = randint(30, 50)
         send_data = ''
         delta = (datetime.datetime.strptime(str(start_date), '%Y-%m-%d') -  datetime.datetime.today()).days
         if delta < -1: # КОКОСТЫЛЬНЕКО раз в сутки обнуляем списки обработанных дат
