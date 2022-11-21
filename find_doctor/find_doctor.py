@@ -7,6 +7,7 @@ import logging
 import argparse
 import common
 import os
+from random import randint
 
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(levelname)s] %(message)s', datefmt='%d-%b-%y %H:%M:%S')
@@ -16,7 +17,7 @@ console.setLevel(logging.INFO)
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 family = (json.loads(open(os.path.join(CURRENT_DIR, "find_doctors.json")).read()))["all_doctors"]
 
-seconds2check = 90
+seconds2check = randint(30, 50)
 
 
 class Doctors:
