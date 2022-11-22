@@ -7,7 +7,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    restart: always
+    restart: unless-stopped
     volumes:
       - /home/tele_tok/:/usr/src/app/token/
     environment:
@@ -23,7 +23,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    restart: always
+    restart: unless-stopped
     volumes:
       - /home/tele_tok/:/usr/src/app/token/
     environment:
@@ -39,7 +39,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    restart: always
+    restart: unless-stopped
     volumes:
       - /home/tele_tok/:/usr/src/app/token/
     environment:
@@ -55,7 +55,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    restart: always
+    restart: unless-stopped
     volumes:
       - /home/tele_tok/:/usr/src/app/token/
     environment:
@@ -64,3 +64,19 @@ services:
       context: ./find_doctor
       dockerfile: Dockerfile_compose
     command: python3 find_doctor.py --name Стоматология
+  ortoped:
+    image: python:3.8-alpine3.16
+    #    container_name: orlova
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+    volumes:
+      - /home/tele_tok/:/usr/src/app/token/
+    environment:
+      - TZ=Europe/Moscow
+    build:
+      context: ./find_doctor
+      dockerfile: Dockerfile_compose
+    command: python3 find_doctor.py --name Батталова

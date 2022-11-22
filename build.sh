@@ -1,5 +1,5 @@
 image_name="find_doctor_image"
-container_name="find_doctor_cont"
+container_name="find_doctor_container"
 rm -f ./find_doctor/common.py
 cp ../common/common.py ./find_doctor/common.py
 cp ../private/tele.kdbx /home/tele_tok/tele.kdbx
