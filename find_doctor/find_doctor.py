@@ -67,7 +67,7 @@ class Doctors:
             'Sec-Fetch-Site' : 'same-origin'
         }
         data2send = {"GetScheduleTableRequest":{"RecordSource":"epgu","RegId":"11347","DateFrom":f'{DateFrom}',"DateTo":f'{DateTo}',"ListSpecs":[{"Spec":f'{specId}'}]}}
-        send_data = requests.post(address, headers=headers, data=json.dumps(data2send), verify=False)
+        send_data = requests.post(address, headers=headers, data=json.dumps(data2send), verify=False, timeout=10)
         return send_data.content
 
 
