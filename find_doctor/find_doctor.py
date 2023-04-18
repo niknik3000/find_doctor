@@ -29,7 +29,6 @@ class Doctors:
     def __get_specialist_info(self, DateFrom, DateTo, specId):
         spec_data = {}
         get_info = self.__get_info(str(DateFrom), str(DateTo), specId).decode("utf-8")
-        # logging.info(f"{get_info}")
         try:
             if not json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']:
                 logging.warning(f"От сервер пришел пустой ответ, у специалиста нет приема в указанном периоде, расширьте диапазон поиска!! {get_info}")
@@ -39,11 +38,23 @@ class Doctors:
                 else:
                     spec_data[json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']['ScheduleRecord']['DoctorName']] = json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']['ScheduleRecord']['ListDateRecords']['DateRecords']
         except Exception as ex:
-            # logging.error(f"Исключение при обработке запроса:\nИсключение:{ex}\nТело ответа:{get_info}")
-            if json.loads(get_info).get('GetScheduleTableResponse').get('Error').get("errorDetail").get("errorCode") != 0:
-                common.send_statistics(f"Исключение при обработке запроса:\nИсключение:{ex}\nТело ответа:{get_info}")
+            logging.info(f"RESPONSE ===> {get_info} <===")
+            if self.is_valid_json(get_info):
+                if json.loads(get_info).get('GetScheduleTableResponse', {}).get('Error', {}).get("errorDetail", {}).get("errorCode"):
+                    err_num = json.loads(get_info).get('GetScheduleTableResponse').get('Error').get("errorDetail").get("errorCode")
+                    err_msg = json.loads(get_info).get('GetScheduleTableResponse').get('Error').get("errorDetail").get("errorMessage")
+                    if err_num != 0:
+                        common.send_statistics(f"Ошибка при обработке запроса на стороне сервера:\nИсключение:{ex}\nТекст ошибки:{err_msg}\nТело ответа:{get_info}")
+                else:
+                    common.send_statistics(f"Исключение при обработке запроса:\nИсключение:{ex}\nТело ответа:{get_info}")
         return spec_data
 
+    def is_valid_json(self, inc_json) -> bool:
+        try:
+            json.loads(inc_json)
+        except ValueError as e:
+            return False
+        return True
 
 
     def __get_info(self, DateFrom, DateTo, specId):
@@ -112,7 +123,7 @@ class Doctors:
 def createParser():
     """Парсим аргументы запуска скрипта"""
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--name', default='Николаева', help="Фамилия врача")
+    parser.add_argument('-t', '--name', default='Ярмак', help="Фамилия врача")
     parser.add_argument('-c', '--days_count', default=20, help="На сколько дней вперед ищем, по умолчанию 20 дней от текущей даты")
     parser.add_argument('-d', '--debug', action='store_false', help="Выводить отладочный лог")
     return parser
