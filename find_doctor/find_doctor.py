@@ -26,7 +26,7 @@ class Doctors:
         """Constructor"""
         self.family = family
 
-    def __get_specialist_info(self, DateFrom, DateTo, specId):
+    def __get_specialist_info(self, DateFrom, DateTo, specId, who):
         spec_data = {}
         get_info = self.__get_info(str(DateFrom), str(DateTo), specId).decode("utf-8")
         try:
@@ -44,9 +44,9 @@ class Doctors:
                     err_num = json.loads(get_info).get('GetScheduleTableResponse').get('Error').get("errorDetail").get("errorCode")
                     err_msg = json.loads(get_info).get('GetScheduleTableResponse').get('Error').get("errorDetail").get("errorMessage")
                     if err_num != 0:
-                        common.send_statistics(f"Ошибка при обработке запроса на стороне сервера:\nИсключение:{ex}\nТекст ошибки:{err_msg}\nТело ответа:{get_info}")
+                        common.send_statistics(f"Ошибка при обработке запроса на стороне сервера для {who}:\nИсключение:{ex}\nТекст ошибки:{err_msg}\nТело ответа:{get_info}")
                 else:
-                    common.send_statistics(f"Исключение при обработке запроса:\nИсключение:{ex}\nТело ответа:{get_info}")
+                    common.send_statistics(f"Исключение при обработке запроса для {who}:\nИсключение:{ex}\nТело ответа:{get_info}")
         return spec_data
 
     def is_valid_json(self, inc_json) -> bool:
@@ -84,7 +84,7 @@ class Doctors:
 
     def get_specialist_work_time(self, who):
         work_time_dict = {}
-        for _item in self.__get_specialist_info(DateFrom, DateTo, family[who]):
+        for _item in self.__get_specialist_info(DateFrom, DateTo, family[who], who):
             work_time_dict[_item['Day'].split('T')[0]] = _item['Time']
         logging.debug(f"work_time_dict: {work_time_dict}")
         return work_time_dict
@@ -104,7 +104,7 @@ class Doctors:
 
 
     def get_specialist_free_tickets(self, days_count, who):
-        get_spec_info = self.__get_specialist_info(DateFrom, DateTo, family[who])
+        get_spec_info = self.__get_specialist_info(DateFrom, DateTo, family[who], who)
         free_tickets_dict = {}
         if get_spec_info:
             for name, dates in get_spec_info.items():
