@@ -40,13 +40,13 @@ class Doctors:
         except Exception as ex:
             logging.info(f"RESPONSE ===> {get_info} <===")
             if self.is_valid_json(get_info):
-                if json.loads(get_info).get('GetScheduleTableResponse', {}).get('Error', {}).get("errorDetail", {}).get("errorCode"):
+                if isinstance(json.loads(get_info).get('GetScheduleTableResponse', {}).get('Error', {}).get("errorDetail", {}).get("errorCode"), int):
                     err_num = json.loads(get_info).get('GetScheduleTableResponse').get('Error').get("errorDetail").get("errorCode")
                     err_msg = json.loads(get_info).get('GetScheduleTableResponse').get('Error').get("errorDetail").get("errorMessage")
                     if err_num != 0:
                         common.send_statistics(f"Ошибка при обработке запроса на стороне сервера для {who}:\nИсключение:{ex}\nТекст ошибки:{err_msg}\nТело ответа:{get_info}")
                 else:
-                    common.send_statistics(f"Исключение при обработке запроса для {who}:\nИсключение:{ex}\nТело ответа:{get_info}")
+                    common.send_statistics(f"Исключение при обработке запроса для {who}:\nИсключение:{ex}\nТело ответа:{get_info}\nТип ответа:{type(get_info)}")
         return spec_data
 
     def is_valid_json(self, inc_json) -> bool:
@@ -123,7 +123,7 @@ class Doctors:
 def createParser():
     """Парсим аргументы запуска скрипта"""
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--name', default='Ярмак', help="Фамилия врача")
+    parser.add_argument('-t', '--name', default='Батталова', help="Фамилия врача")
     parser.add_argument('-c', '--days_count', default=20, help="На сколько дней вперед ищем, по умолчанию 20 дней от текущей даты")
     parser.add_argument('-d', '--debug', action='store_false', help="Выводить отладочный лог")
     return parser
