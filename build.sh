@@ -1,3 +1,5 @@
+#!/bin/bash
+set -e
 image_name="find_doctor_image"
 container_name="find_doctor_container"
 rm -f ./find_doctor/common.py
@@ -10,7 +12,8 @@ docker run \
 --detach \
 --name ${container_name} \
 --env-file ./find_doctor/env_find_doctor.env \
---restart=always \
+--restart=on-failure \
+--log-opt max-size=50m \
 -v /home/tele_tok/:/usr/src/app/token/ \
 -v $(pwd)/find_doctor/:/usr/src/app/ \
 --entrypoint python3 ${image_name} ./get_processes.py
