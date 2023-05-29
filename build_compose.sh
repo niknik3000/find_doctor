@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-sudo apt install jq -y
+sudo apt install jq yamllint -y
 jq . ./find_doctor/find_doctors.json 1>/dev/null
 python3 -m pip install --user yamllint
 yamllint ./find_doctor_compose.yaml
