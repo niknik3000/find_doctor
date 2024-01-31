@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e
 sudo apt install jq yamllint -y
-jq . ./find_doctor/find_doctors.json 1>/dev/null
+jq . ./find_doctor/11347.json 1>/dev/null
+jq . ./find_doctor/30058.json 1>/dev/null
 python3 -m pip install --user yamllint
 yamllint ./find_doctor_compose.yaml
 docker-compose -f ./find_doctor_compose.yaml down

@@ -15,7 +15,6 @@ console = logging.StreamHandler()
 console.setLevel(logging.INFO)
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-family = (json.loads(open(os.path.join(CURRENT_DIR, "find_doctors.json")).read()))["all_doctors"]
 
 
 
@@ -71,13 +70,13 @@ class Doctors:
             'Origin' : 'https://intermed76.ru',
             'DNT' : '1',
             'Connection' : 'keep-alive',
-            'Referer' : f'https://intermed76.ru/?moId=11347&specId={specId}',
+            'Referer' : f'https://intermed76.ru/?moId={med_id}&specId={specId}',
             'Cookie' : 'JSESSIONID=4577D2D0D88BED2751B76F4F78C3F5C7',
             'Sec-Fetch-Dest' : 'empty',
             'Sec-Fetch-Mode' : 'cors',
             'Sec-Fetch-Site' : 'same-origin'
         }
-        data2send = {"GetScheduleTableRequest":{"RecordSource":"epgu","RegId":"11347","DateFrom":f'{DateFrom}',"DateTo":f'{DateTo}',"ListSpecs":[{"Spec":f'{specId}'}]}}
+        data2send = {"GetScheduleTableRequest":{"RecordSource":"epgu","RegId":f"{med_id}","DateFrom":f'{DateFrom}',"DateTo":f'{DateTo}',"ListSpecs":[{"Spec":f'{specId}'}]}}
         send_data = requests.post(address, headers=headers, data=json.dumps(data2send), verify=False, timeout=180)
         return send_data.content
 
@@ -123,16 +122,19 @@ class Doctors:
 def createParser():
     """Парсим аргументы запуска скрипта"""
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--name', default='Батталова', help="Фамилия врача")
+    parser.add_argument('-t', '--name', default='Симановская', help="Фамилия врача")
+    parser.add_argument('-f', '--config_file', default='30058.json', help="Файл с инфой о врачах, имя файла - id заведения")
     parser.add_argument('-c', '--days_count', default=20, help="На сколько дней вперед ищем, по умолчанию 20 дней от текущей даты")
     parser.add_argument('-d', '--debug', action='store_false', help="Выводить отладочный лог")
     return parser
 
 
 if __name__ == "__main__":
-    doctor = Doctors(family)
     sended_tickets = {}
     params = createParser().parse_args()
+    family = (json.loads(open(os.path.join(CURRENT_DIR, params.config_file)).read()))["all_doctors"]
+    med_id = params.config_file.replace(".json", "")
+    doctor = Doctors(family)
     get_info = {}
     start_date =  datetime.date.today()
     if params.debug:
@@ -177,7 +179,7 @@ if __name__ == "__main__":
                 else:
                     logging.info(f"Нечего отсылать {get_info}")
             if send_data:
-                send_data = params.name + '\n' + send_data + '\n' + f"https://intermed76.ru/?moId=11347&specId={family[params.name]}"
+                send_data = params.name + '\n' + send_data + '\n' + f"https://intermed76.ru/?moId={med_id}&specId={family[params.name]}"
                 common.send_doctors(send_data)
             # else:
             #     logging.info(f'No avaible tickets in {params.days_count} days, retry after {seconds2check} seconds\nDEBUG: {get_info}')
