@@ -8,6 +8,7 @@ import argparse
 import common
 import os
 from random import randint
+import uuid
 
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(levelname)s] %(message)s', datefmt='%d-%b-%y %H:%M:%S')
@@ -32,10 +33,13 @@ class Doctors:
             if not json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']:
                 logging.warning(f"От сервер пришел пустой ответ, у специалиста нет приема в указанном периоде, расширьте диапазон поиска!! {get_info}")
             for d in json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']['ScheduleRecord']:
-                if isinstance(d, (dict)):
-                    spec_data[d['DoctorName']] = d['ListDateRecords']['DateRecords']
-                else:
-                    spec_data[json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']['ScheduleRecord']['DoctorName']] = json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']['ScheduleRecord']['ListDateRecords']['DateRecords']
+                if isinstance(d, (str)):
+                    d = json.loads(d)
+                spec_data[d['DoctorName']] = d['ListDateRecords']['DateRecords']
+                spec_data['DoctorId'] = d['DoctorId']
+                # else:
+                #     spec_data[json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']['ScheduleRecord']['DoctorName']] = json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']['ScheduleRecord']['ListDateRecords']['DateRecords']
+                #     spec_data["DoctorId"] = json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']['ScheduleRecord']['DoctorId']
         except Exception as ex:
             logging.info(f"RESPONSE ===> {get_info} <===")
             if self.is_valid_json(get_info):
@@ -55,14 +59,8 @@ class Doctors:
             return False
         return True
 
-
-    def __get_info(self, DateFrom, DateTo, specId):
-        """
-        Get info from server
-        """
-        # logging.info("specId " + str(specId))
-        address = 'https://intermed76.ru/intermed/findSchedulesTable'
-        headers = {
+    def __headers(self, med_id, specId):
+        return {
             'User-Agent' : 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:91.0) Gecko/20100101 Firefox/91.0',
             'Accept-Language' : 'ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3',
             'Content-Type' : 'application/json',
@@ -71,13 +69,19 @@ class Doctors:
             'DNT' : '1',
             'Connection' : 'keep-alive',
             'Referer' : f'https://intermed76.ru/?moId={med_id}&specId={specId}',
-            'Cookie' : 'JSESSIONID=4577D2D0D88BED2751B76F4F78C3F5C7',
+            'Cookie': f'JSESSIONID={gen_uuid}',
             'Sec-Fetch-Dest' : 'empty',
             'Sec-Fetch-Mode' : 'cors',
             'Sec-Fetch-Site' : 'same-origin'
         }
+
+    def __get_info(self, DateFrom, DateTo, specId):
+        """
+        Get info from server
+        """
+        address = 'https://intermed76.ru/intermed/findSchedulesTable'
         data2send = {"GetScheduleTableRequest":{"RecordSource":"epgu","RegId":f"{med_id}","DateFrom":f'{DateFrom}',"DateTo":f'{DateTo}',"ListSpecs":[{"Spec":f'{specId}'}]}}
-        send_data = requests.post(address, headers=headers, data=json.dumps(data2send), verify=False, timeout=180)
+        send_data = requests.post(address, headers=self.__headers(med_id, specId), data=json.dumps(data2send), verify=False, timeout=180)
         return send_data.content
 
 
@@ -107,23 +111,50 @@ class Doctors:
         free_tickets_dict = {}
         if get_spec_info:
             for name, dates in get_spec_info.items():
-                free_tickets_dict[name] = {}
-                for _item in dates:
-                    if isinstance(_item, dict):
+                doc_id = get_spec_info["DoctorId"]
+                if who in name:
+                    free_tickets_dict[name] = {}
+                    for _item in dates:
+                        if isinstance(_item, str):
+                            _item = json.loads(_item)
                         if _item['FreeRecords'] > 0 and not len(_item['Comment']) > 0:
-                            free_tickets_dict[name][_item['Day'].split('T')[0]] = _item['FreeRecords']
-                    elif isinstance(_item, str):
-                        if dates['FreeRecords'] > 0 and not len(dates['Comment']) > 0:
-                            free_tickets_dict[name][dates['Day'].split('T')[0]] = dates['FreeRecords']
+                            date_of = _item['Day'].split('T')[0]
+                            free_tickets_dict[name][date_of] = {}
+                            time = self.time_request(date_of, doc_id, family[who])
+                            free_tickets_dict[name][date_of]['FreeRecords'] = _item['FreeRecords']
+                            free_tickets_dict[name][date_of]['FreeTime'] = time
+                        # elif isinstance(_item, str):
+                        #     if dates['FreeRecords'] > 0 and not len(dates['Comment']) > 0:
+                        #         date_of = dates['Day'].split('T')[0]
+                        #         time = self.time_request(date_of, doc_id, family[who])
+                        #         free_tickets_dict[name][date_of]['FreeRecords'] = dates['FreeRecords']
+                        #         free_tickets_dict[name][date_of]['FreeTime'] = time
         logging.debug(f'Get DATA: {free_tickets_dict}')
         free_tickets_dict = self.__sort_dict(free_tickets_dict)
-        return free_tickets_dict
+        return free_tickets_dict # {'Николаева Татьяна Александровна (Детская поликлиника №2)': {'2024-02-01': 1, '2024-02-12': 6}}
+
+    def time_request(self, date, doc_id, spec_id):
+        """"""
+        address = "https://intermed76.ru/intermed/findScheduleFreeSlots"
+        request_dict = {
+            "GetScheduleFreeSlotsRequest": {
+                "DateRequest": f"{date}",
+                "DepartOid": f"{med_id}",
+                "DoctorId": f"{doc_id}",
+                "SpecId": f"{spec_id}"
+            }
+        }
+        send_data = requests.post(address, headers=self.__headers(med_id, spec_id), data=json.dumps(request_dict), verify=False, timeout=180)
+        if send_data.status_code == 200:
+            return send_data.json()["GetScheduleFreeSlotsResponse"]["Free_Slots"]
+        else:
+            raise ConnectionError(f"Не получили ответ от {address} код {send_data.status_code}")
 
 def createParser():
     """Парсим аргументы запуска скрипта"""
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--name', default='Симановская', help="Фамилия врача")
-    parser.add_argument('-f', '--config_file', default='30058.json', help="Файл с инфой о врачах, имя файла - id заведения")
+    parser.add_argument('-t', '--name', default='Ярмак', help="Фамилия врача")
+    parser.add_argument('-f', '--config_file', default='11347.json', help="Файл с инфой о врачах, имя файла - id заведения")
     parser.add_argument('-c', '--days_count', default=20, help="На сколько дней вперед ищем, по умолчанию 20 дней от текущей даты")
     parser.add_argument('-d', '--debug', action='store_false', help="Выводить отладочный лог")
     return parser
@@ -150,7 +181,8 @@ if __name__ == "__main__":
         raise ValueError(f"Специалист должен быть в списке {family.keys()}")
     common.send_statistics(f"Поиск явок для {params.name}")
     while True:
-        seconds2check = randint(30, 50)
+        gen_uuid = uuid.uuid4().hex.upper()
+        seconds2check = randint(60, 90)
         send_data = ''
         delta = (datetime.datetime.strptime(str(start_date), '%Y-%m-%d') -  datetime.datetime.today()).days
         if delta < -1: # КОКОСТЫЛЬНЕКО раз в сутки обнуляем списки обработанных дат
@@ -164,45 +196,214 @@ if __name__ == "__main__":
         if get_info:
             for key, value in get_info.items():
                 if not sended_tickets.get(key):
-                    sended_tickets[key] = []
+                    sended_tickets[key] = {}
                 if value:
                     if (
                         (len([x for x in get_info.keys() if params.name in x]) > 0 and params.name in key)
                         or (len([x for x in get_info.keys() if params.name in x]) == 0)
                         ):
-                        for _date, _number in value.items():
+                        for _date, records_info in value.items():
+                            records_count = records_info["FreeRecords"]
+                            records_time = sorted(records_info["FreeTime"].split(';'))
                             if not _date in sended_tickets[key]:
-                                send_data += f"{_date} cвободно {_number} явок\n"
-                                sended_tickets[key].append(_date)
+                                send_data += f"=========\n{_date} cвободно {records_count} явок\nСвободное время:{records_time}\n"
+                                sended_tickets[key][_date] = records_time
                             else:
-                                logging.info(f"По дате {_date} уже отсылалось оповещение {sended_tickets[key]}")
+                                free_time_diff =  list(set(records_time) - set(sended_tickets[key][_date]))
+                                if not free_time_diff:
+                                    logging.info(f"По дате {_date} и времени {free_time_diff} уже отсылалось оповещение {sended_tickets[key]}")
+                                else:
+                                    send_data += f"=========\n{_date} появилось {len(free_time_diff)} явок\nСвободное время:{free_time_diff}\n"
                 else:
                     logging.info(f"Нечего отсылать {get_info}")
             if send_data:
                 send_data = params.name + '\n' + send_data + '\n' + f"https://intermed76.ru/?moId={med_id}&specId={family[params.name]}"
                 common.send_doctors(send_data)
-            # else:
-            #     logging.info(f'No avaible tickets in {params.days_count} days, retry after {seconds2check} seconds\nDEBUG: {get_info}')
         time.sleep(seconds2check)
 
-
-# TODO: доделать получение времени явки запросом curl 'https://intermed76.ru/intermed/findScheduleFreeSlots' \
-#   -H 'Connection: keep-alive' \
-#   -H 'Pragma: no-cache' \
-#   -H 'Cache-Control: no-cache' \
-#   -H 'sec-ch-ua: "Chromium";v="92", " Not A;Brand";v="99", "Google Chrome";v="92"' \
-#   -H 'Accept: application/json, text/javascript, */*; q=0.01' \
-#   -H 'DNT: 1' \
-#   -H 'X-Requested-With: XMLHttpRequest' \
-#   -H 'sec-ch-ua-mobile: ?0' \
-#   -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36' \
-#   -H 'Content-Type: application/json' \
-#   -H 'Origin: https://intermed76.ru' \
-#   -H 'Sec-Fetch-Site: same-origin' \
-#   -H 'Sec-Fetch-Mode: cors' \
-#   -H 'Sec-Fetch-Dest: empty' \
-#   -H 'Referer: https://intermed76.ru/?moId=11347&specId=14' \
-#   -H 'Accept-Language: ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7' \
-#   -H 'Cookie: JSESSIONID=153938F40AC10F30BB6D8CB46917B29D' \
-#   --data-raw '{"GetScheduleFreeSlotsRequest":{"DepartOid":"11347","SpecId":"14","DoctorId":"04562285963","DateRequest":"2021-09-30"}}' \
-#   --compressed
+# ============================================================================================
+# общий запрос https://intermed76.ru/intermed/findSpecs
+# вида
+# {
+# 	"GetServiceSpecsInfoRequest": {
+# 		"MO_Id": "1.2.643.5.1.13.13.12.2.76.11381",
+# 		"Reg_Id": "11347"
+# 	}
+# }
+# вернет
+# {
+# 	"GetServiceSpecsInfoResponse": {
+# 		"Session_ID": "8fca8848-cb6b-4aec-875b-647dba47e2fc",
+# 		"ListServiceSpecs": {
+# 			"ServiceSpec": [
+# 				{
+# 					"ServiceSpec_Id": 79,
+# 					"ServiceSpec_Name": "Гастроэнтерология"
+# 				},
+# 				{
+# 					"ServiceSpec_Id": 10,
+# 					"ServiceSpec_Name": "Дерматовенерология"
+# 				},
+# 				{
+# 					"ServiceSpec_Id": 81,
+# 					"ServiceSpec_Name": "Детская кардиология"
+# 				},
+# 				{
+# 					"ServiceSpec_Id": 11,
+# 					"ServiceSpec_Name": "Детская хирургия"
+# 				},
+# 				{
+# 					"ServiceSpec_Id": 83,
+# 					"ServiceSpec_Name": "Детская эндокринология"
+# 				},
+# 				{
+# 					"ServiceSpec_Id": 14,
+# 					"ServiceSpec_Name": "Неврология"
+# 				},
+# 				{
+# 					"ServiceSpec_Id": 19,
+# 					"ServiceSpec_Name": "Оториноларингология"
+# 				},
+# 				{
+# 					"ServiceSpec_Id": 22,
+# 					"ServiceSpec_Name": "Педиатрия"
+# 				},
+# 				{
+# 					"ServiceSpec_Id": 208,
+# 					"ServiceSpec_Name": "Стоматология"
+# 				},
+# 				{
+# 					"ServiceSpec_Id": 28,
+# 					"ServiceSpec_Name": "Травматология и ортопедия"
+# 				}
+# 			]
+# 		},
+# 		"Error": {
+# 			"errorDetail": {
+# 				"errorCode": 0,
+# 				"errorMessage": ""
+# 			}
+# 		}
+# 	}
+# }
+# ============================================================================================
+# запрос на https://intermed76.ru/intermed/findSchedulesTable
+# {
+# 	"GetScheduleTableRequest": {
+# 		"DateFrom": "2024-01-31",
+# 		"DateTo": "2024-02-14",
+# 		"ListSpecs": [
+# 			{
+# 				"Spec": "19"
+# 			}
+# 		],
+# 		"RecordSource": "epgu",
+# 		"RegId": "11347"
+# 	}
+# }
+# вернет
+# {
+# 	"GetScheduleTableResponse": {
+# 		"ListScheduleRecord": {
+# 			"ScheduleRecord": {
+# 				"DoctorId": 12453670345,
+# 				"DoctorName": "Николаева Татьяна Александровна (Детская поликлиника №2)",
+# 				"DoctorSpec": 19,
+# 				"DoctorSpecName": "Оториноларингология",
+# 				"Area": "",
+# 				"Cabinet": 30,
+# 				"ListDateRecords": {
+# 					"DateRecords": [
+# 						{
+# 							"Day": "2024-02-03T00:00:00+03:00",
+# 							"Time": "09:00 - 14:00",
+# 							"AllRecords": 27,
+# 							"FreeRecords": 0,
+# 							"Comment": ""
+# 						},
+# 						{
+# 							"Day": "2024-02-01T00:00:00+03:00",
+# 							"Time": "09:00 - 15:00",
+# 							"AllRecords": 26,
+# 							"FreeRecords": 1,
+# 							"Comment": ""
+# 						},
+# 						{
+# 							"Day": "2024-02-02T00:00:00+03:00",
+# 							"Time": "09:00 - 15:00",
+# 							"AllRecords": 32,
+# 							"FreeRecords": 0,
+# 							"Comment": ""
+# 						},
+# 						{
+# 							"Day": "2024-02-06T00:00:00+03:00",
+# 							"Time": "09:00 - 15:00",
+# 							"AllRecords": 32,
+# 							"FreeRecords": 0,
+# 							"Comment": ""
+# 						},
+# 						{
+# 							"Day": "2024-02-08T00:00:00+03:00",
+# 							"Time": "09:00 - 15:00",
+# 							"AllRecords": 26,
+# 							"FreeRecords": 0,
+# 							"Comment": ""
+# 						},
+# 						{
+# 							"Day": "2024-02-09T00:00:00+03:00",
+# 							"Time": "09:00 - 15:00",
+# 							"AllRecords": 32,
+# 							"FreeRecords": 0,
+# 							"Comment": ""
+# 						},
+# 						{
+# 							"Day": "2024-01-31T00:00:00+03:00",
+# 							"Time": "12:00 - 16:00",
+# 							"AllRecords": 22,
+# 							"FreeRecords": 0,
+# 							"Comment": ""
+# 						},
+# 						{
+# 							"Day": "2024-02-05T00:00:00+03:00",
+# 							"Time": "13:00 - 19:00",
+# 							"AllRecords": 32,
+# 							"FreeRecords": 0,
+# 							"Comment": ""
+# 						},
+# 						{
+# 							"Day": "2024-02-12T00:00:00+03:00",
+# 							"Time": "13:00 - 19:00",
+# 							"AllRecords": 32,
+# 							"FreeRecords": 6,
+# 							"Comment": ""
+# 						}
+# 					]
+# 				}
+# 			}
+# 		},
+# 		"Error": {
+# 			"errorDetail": {
+# 				"errorCode": 0,
+# 				"errorMessage": ""
+# 			}
+# 		}
+# 	}
+# }
+# ============================================================================================
+# запрос на получение времени приема по врачу JSON на https://intermed76.ru/intermed/findScheduleFreeSlots
+# {
+# 	"GetScheduleFreeSlotsRequest": {
+# 		"DateRequest": "2024-02-12",
+# 		"DepartOid": "11347",
+# 		"DoctorId": "12453670345",
+# 		"SpecId": "19"
+# 	}
+# }
+# вернет
+# {
+# 	"GetScheduleFreeSlotsResponse": {
+# 		"Free_Slots": "14:00;14:12;14:36;14:48;15:12;15:36",
+# 		"Status_Code": 0
+# 	}
+# }
+# ============================================================================================
