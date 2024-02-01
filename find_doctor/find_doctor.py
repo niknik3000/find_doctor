@@ -207,7 +207,7 @@ if __name__ == "__main__":
                             records_count = records_info["FreeRecords"]
                             records_time = sorted(records_info["FreeTime"].split(';'))
                             if not _date in sended_tickets[key]:
-                                send_data += f"=========\n{_date} cвободно {records_count} явок\nСвободное время:{records_time}\n"
+                                send_data += f"=========\n{_date}\n cвободно {records_count} явок\nСвободное время:{records_time}\n"
                                 sended_tickets[key][_date] = records_time
                             else:
                                 free_time_diff =  list(set(records_time) - set(sended_tickets[key][_date]))
