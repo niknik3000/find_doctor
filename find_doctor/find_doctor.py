@@ -33,15 +33,16 @@ class Doctors:
             if not json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']:
                 logging.warning(f"От сервер пришел пустой ответ, у специалиста нет приема в указанном периоде, расширьте диапазон поиска!! {get_info}")
             for d in json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']['ScheduleRecord']:
-                if isinstance(d, (str)):
-                    d = json.loads(d)
-                spec_data[d['DoctorName']] = d['ListDateRecords']['DateRecords']
-                spec_data['DoctorId'] = d['DoctorId']
-                # else:
-                #     spec_data[json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']['ScheduleRecord']['DoctorName']] = json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']['ScheduleRecord']['ListDateRecords']['DateRecords']
-                #     spec_data["DoctorId"] = json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']['ScheduleRecord']['DoctorId']
+                # кусок ниже не трогать так как если возвращается str, то при преобразовании в dict списка нет
+                if isinstance(d, dict):
+                    spec_data[d['DoctorName']] = d['ListDateRecords']['DateRecords']
+                    spec_data['DoctorId'] = d['DoctorId']
+                else:
+                    spec_data[json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']['ScheduleRecord']['DoctorName']] = json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']['ScheduleRecord']['ListDateRecords']['DateRecords']
+                    spec_data["DoctorId"] = json.loads(get_info)['GetScheduleTableResponse']['ListScheduleRecord']['ScheduleRecord']['DoctorId']
         except Exception as ex:
-            logging.info(f"RESPONSE ===> {get_info} <===")
+            logging.error(f"EXCEPTION: {ex}")
+            logging.error(f"RESPONSE ===> {get_info} <===")
             if self.is_valid_json(get_info):
                 if isinstance(json.loads(get_info).get('GetScheduleTableResponse', {}).get('Error', {}).get("errorDetail", {}).get("errorCode"), int):
                     err_num = json.loads(get_info).get('GetScheduleTableResponse').get('Error').get("errorDetail").get("errorCode")
@@ -153,7 +154,7 @@ class Doctors:
 def createParser():
     """Парсим аргументы запуска скрипта"""
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--name', default='Ярмак', help="Фамилия врача")
+    parser.add_argument('-t', '--name', default='Николаева', help="Фамилия врача")
     parser.add_argument('-f', '--config_file', default='11347.json', help="Файл с инфой о врачах, имя файла - id заведения")
     parser.add_argument('-c', '--days_count', default=20, help="На сколько дней вперед ищем, по умолчанию 20 дней от текущей даты")
     parser.add_argument('-d', '--debug', action='store_false', help="Выводить отладочный лог")
