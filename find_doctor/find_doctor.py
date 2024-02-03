@@ -206,14 +206,15 @@ if __name__ == "__main__":
                             records_count = records_info["FreeRecords"]
                             records_time = sorted(records_info["FreeTime"].split(';'))
                             if not _date in sended_tickets[key]:
-                                send_data += f"=========\n{_date} cвободно {records_count} явок\nСвободное время:{records_time}\n"
+                                send_data += f"===========\n{_date}\nСвободно явок: {records_count}\nСвободное время: {records_time}\n"
                                 sended_tickets[key][_date] = records_time
                             else:
                                 free_time_diff =  list(set(records_time) - set(sended_tickets[key][_date]))
                                 if not free_time_diff:
                                     logging.info(f"По дате {_date} и времени {free_time_diff} уже отсылалось оповещение {sended_tickets[key]}")
                                 else:
-                                    send_data += f"=========\n{_date} появилось {len(free_time_diff)} явок\nСвободное время:{free_time_diff}\n"
+                                    send_data += f"===========\n{_date}\nПоявилось явок: {len(free_time_diff)}\nСвободное время: {free_time_diff}\n"
+                                    sended_tickets[key][_date].extend(records_time)
                 else:
                     logging.info(f"Нечего отсылать {get_info}")
             if send_data:
