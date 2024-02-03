@@ -212,7 +212,7 @@ if __name__ == "__main__":
                             else:
                                 free_time_diff =  list(set(records_time) - set(sended_tickets[key][_date]))
                                 if not free_time_diff:
-                                    logging.info(f"По дате {_date} и времени {free_time_diff} уже отсылалось оповещение {sended_tickets[key]}")
+                                    logging.info(f"По дате {_date} для всех явок уже отсылалось оповещение {json.dumps(sended_tickets[key], sort_keys=True, indent=4)}")
                                 else:
                                     send_data += f"===========\n{_date}\nПоявилось явок: {len(free_time_diff)}\nСвободное время: {free_time_diff}\n"
                                     sended_tickets[key][_date].extend(records_time)
