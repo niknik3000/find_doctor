@@ -223,6 +223,7 @@ if __name__ == "__main__":
                 common.send_doctors(send_data)
         time.sleep(seconds2check)
 
+
 # ============================================================================================
 # общий запрос https://intermed76.ru/intermed/findSpecs
 # вида
