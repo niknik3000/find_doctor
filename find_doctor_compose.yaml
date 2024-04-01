@@ -1,3 +1,4 @@
+---
 version: "3"
 services:
   nikolaeva:
@@ -15,19 +16,19 @@ services:
       context: ./find_doctor
     command: python3 find_doctor.py --name Николаева --config_file 11347.json
   gromov:
-      image: python:3.8-alpine3.16
-      logging:
-        options:
-          max-size: "10m"
-          max-file: "3"
-      restart: unless-stopped
-      volumes:
-        - /home/tele_tok/:/usr/src/app/token/
-      environment:
-        - TZ=Europe/Moscow
-      build:
-        context: ./find_doctor
-      command: python3 find_doctor.py --name Громов --config_file 10392.json
+    image: python:3.8-alpine3.16
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+    volumes:
+      - /home/tele_tok/:/usr/src/app/token/
+    environment:
+      - TZ=Europe/Moscow
+    build:
+      context: ./find_doctor
+    command: python3 find_doctor.py --name Громов --config_file 10392.json
   subbot:
     image: python:3.8-alpine3.16
     logging:
