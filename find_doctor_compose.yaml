@@ -1,20 +1,5 @@
 version: "3"
 services:
-  yarmak:
-    image: python:3.8-alpine3.16
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "3"
-    restart: unless-stopped
-    volumes:
-      - /home/tele_tok/:/usr/src/app/token/
-    environment:
-      - TZ=Europe/Moscow
-    build:
-      context: ./find_doctor
-      dockerfile: Dockerfile_compose
-    command: python3 find_doctor.py --name Ярмак --config_file 11347.json
   nikolaeva:
     image: python:3.8-alpine3.16
     logging:
@@ -30,67 +15,7 @@ services:
       context: ./find_doctor
       dockerfile: Dockerfile_compose
     command: python3 find_doctor.py --name Николаева --config_file 11347.json
-  # orlova:
-  #   image: python:3.8-alpine3.16
-  #   logging:
-  #     options:
-  #       max-size: "10m"
-  #       max-file: "3"
-  #   restart: unless-stopped
-  #   volumes:
-  #     - /home/tele_tok/:/usr/src/app/token/
-  #   environment:
-  #     - TZ=Europe/Moscow
-  #   build:
-  #     context:  ./find_doctor
-  #     dockerfile: Dockerfile_compose
-  #   command: python3 find_doctor.py --name Орлова
-  # stomatologi:
-  #   image: python:3.8-alpine3.16
-  #   logging:
-  #     options:
-  #       max-size: "10m"
-  #       max-file: "3"
-  #   restart: unless-stopped
-  #   volumes:
-  #     - /home/tele_tok/:/usr/src/app/token/
-  #   environment:
-  #     - TZ=Europe/Moscow
-  #   build:
-  #     context: ./find_doctor
-  #     dockerfile: Dockerfile_compose
-  #   command: python3 find_doctor.py --name Стоматология --config_file 11347.json
-  # ortoped:
-  #   image: python:3.8-alpine3.16
-  #   logging:
-  #     options:
-  #       max-size: "10m"
-  #       max-file: "3"
-  #   restart: unless-stopped
-  #   volumes:
-  #     - /home/tele_tok/:/usr/src/app/token/
-  #   environment:
-  #     - TZ=Europe/Moscow
-  #   build:
-  #     context: ./find_doctor
-  #     dockerfile: Dockerfile_compose
-  #   command: python3 find_doctor.py --name Батталова --config_file 11347.json
-  # gastroenterolog:
-  #   image: python:3.8-alpine3.16
-  #   logging:
-  #     options:
-  #       max-size: "10m"
-  #       max-file: "3"
-  #   restart: unless-stopped
-  #   volumes:
-  #     - /home/tele_tok/:/usr/src/app/token/
-  #   environment:
-  #     - TZ=Europe/Moscow
-  #   build:
-  #     context: ./find_doctor
-  #     dockerfile: Dockerfile_compose
-  #   command: python3 find_doctor.py --name Гастроэнтеролог --config_file 11347.json
-  simanovskaya:
+  yarmak:
     image: python:3.8-alpine3.16
     logging:
       options:
@@ -104,4 +29,34 @@ services:
     build:
       context: ./find_doctor
       dockerfile: Dockerfile_compose
-    command: python3 find_doctor.py --name Симановская --config_file 30058.json
+    command: python3 find_doctor.py --name Ярмак --config_file 11347.json
+  gromov:
+    image: python:3.8-alpine3.16
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+    volumes:
+      - /home/tele_tok/:/usr/src/app/token/
+    environment:
+      - TZ=Europe/Moscow
+    build:
+      context: ./find_doctor
+      dockerfile: Dockerfile_compose
+    command: python3 find_doctor.py --name Громов --config_file 10392.json
+#  subbot:
+#    image: python:3.8-alpine3.16
+#    logging:
+#      options:
+#        max-size: "10m"
+#        max-file: "3"
+#    restart: unless-stopped
+#    volumes:
+#      - /home/tele_tok/:/usr/src/app/token/
+#    environment:
+#      - TZ=Europe/Moscow
+#    build:
+#      context: ./find_doctor
+#      dockerfile: Dockerfile_compose
+#    command: python3 find_doctor.py --name Суббот --config_file 11651.json
