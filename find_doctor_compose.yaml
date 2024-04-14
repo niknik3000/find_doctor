@@ -60,18 +60,18 @@ services:
       context: ./find_doctor
       dockerfile: Dockerfile_compose
     command: python3 find_doctor.py --name Демяненко --config_file 11652.json
-#  subbot:
-#    image: python:3.8-alpine3.16
-#    logging:
-#      options:
-#        max-size: "10m"
-#        max-file: "3"
-#    restart: unless-stopped
-#    volumes:
-#      - /home/tele_tok/:/usr/src/app/token/
-#    environment:
-#      - TZ=Europe/Moscow
-#    build:
-#      context: ./find_doctor
-#      dockerfile: Dockerfile_compose
-#    command: python3 find_doctor.py --name Суббот --config_file 11651.json
+  subbot:
+    image: python:3.8-alpine3.16
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+    volumes:
+      - /home/tele_tok/:/usr/src/app/token/
+    environment:
+      - TZ=Europe/Moscow
+    build:
+      context: ./find_doctor
+      dockerfile: Dockerfile_compose
+    command: python3 find_doctor.py --name Суббот --config_file 11651.json
